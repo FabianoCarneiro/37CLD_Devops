@@ -52,7 +52,10 @@ jobs:
     
       - name: Package
         run: mvn package            
-          
+  
+  # ====================================================
+  # FLUXO DEVELOP (STG)
+  # ====================================================
   deploy-STG:
     runs-on: ubuntu-latest
     needs: build
@@ -89,7 +92,9 @@ jobs:
           chmod +x src/main/scripts/testeIntegrado.sh
           ./src/main/scripts/testeIntegrado.sh
 
-  # Fluxo de Release (PRE)
+  # ====================================================
+  # FLUXO RELEASE (PRE)
+  # ====================================================
   deploy-Pre:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/release'
@@ -125,3 +130,58 @@ jobs:
         run: |
           chmod +x src/main/scripts/testesFuncionais.sh
           ./src/main/scripts/testesFuncionais.sh
+
+  # NOVO STEP: Teste Performance (Release)
+  testePerformancePre:
+    runs-on: ubuntu-latest
+    needs: testeFuncionais
+    if: github.ref == 'refs/heads/release'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Performance Tests
+        shell: bash
+        run: |
+          # Assumindo que o script existe com este nome
+          chmod +x src/main/scripts/testePerformance.sh
+          ./src/main/scripts/testePerformance.sh
+
+  # ====================================================
+  # FLUXO MAIN (PROD)
+  # ====================================================
+  deploy-Prod:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: prod
+    needs: build
+    steps:
+      - name: Deploy 
+        shell: bash
+        run: |
+          echo "Deploy PROD"
+
+  # NOVO STEP: Smoke Test Prod
+  smoke-Prod:
+    runs-on: ubuntu-latest
+    needs: deploy-Prod
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Smoke Test Prod
+        shell: bash
+        run: |
+          chmod +x src/main/scripts/smoketest.sh
+          ./src/main/scripts/smoketest.sh
+
+  # NOVO STEP: Teste Performance Prod
+  testePerformanceProd:
+    runs-on: ubuntu-latest
+    needs: smoke-Prod
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Performance Tests Prod
+        shell: bash
+        run: |
+          chmod +x src/main/scripts/testePerformance.sh
+          ./src/main/scripts/testePerformance.sh
