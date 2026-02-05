@@ -1,2 +1,2 @@
 echo 'EXECUTANDO SMOKE TEST'
-exzit 0
+exit 0
