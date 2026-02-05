@@ -3,6 +3,11 @@ name: pipeline
 on:
   push:
   workflow_dispatch:
+  unit-test:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - run: mvn test
 jobs:
   build: 
     runs-on: ubuntu-latest
